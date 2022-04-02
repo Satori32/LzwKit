@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <cstdint>
-#include <map>
 #include <random>
 #include <limits>
 #include <algorithm>
@@ -9,7 +8,6 @@
 typedef std::vector<std::uint8_t> Data;
 typedef std::uint16_t Word;
 typedef std::vector<Word> DType;
-typedef std::map<Data, Word> Dic;
 typedef std::vector<Data> Datas;
 
 Data MakeVector(std::size_t N, std::uint32_t Seed = 0) {
@@ -62,8 +60,6 @@ DType Lzw_Enc(const Data& D) {
 	//R.push_back(0xfffe);//clear code.
 	//R.push_back(0xffff);//stop code.
 
-	//Datas::iterator it2= Di.begin();
-
 	for (std::size_t i = 0; i < D.size(); i++) {
 		V.push_back(D[i]);
 
@@ -83,7 +79,6 @@ DType Lzw_Enc(const Data& D) {
 			i--;
 		}
 	}
-	/**/
 	if (V.size()) {
 		auto It=std::find(Di.begin(), Di.end(), V);
 		if (It == Di.end()) {
@@ -93,29 +88,11 @@ DType Lzw_Enc(const Data& D) {
 			R.push_back(std::distance(Di.begin(),It));
 		}
 	}
-	/**/
-	/** /
-	//compless.
-	Datas::iterator it2 = Di.begin();
-
-	for (auto& o : D) {
-		V.push_back(o);
-
-		Datas::iterator it = std::find(Di.begin(), Di.end(), V);
-
-		if (it == Di.end()) {
-			auto L = std::distance(Di.begin(), it2);
-			R.push_back(L);
-			V.clear();
-		}
-		it2 = it;
-	}
-	/**/
 
 	return R;
 }
 
-Data Lzw_Dec(const DType& D,const Data& In) {
+Data Lzw_Dec(const DType& D, const Data& In) {
 
 	Data V;
 	Datas Di;
@@ -128,16 +105,17 @@ Data Lzw_Dec(const DType& D,const Data& In) {
 	}
 
 	std::size_t i = 0;
-	for (i=0;i<D.size()-1;i++){
+	for (i = 0; i < D.size() - 1; i++) {
 		V = Di[D[i]];
 		Di.push_back(V);
 		Di.back().push_back(Di[D[i + 1]].front());
 
 		R.insert(R.end(), V.begin(), V.end());
 	}
-		V = Di[D[i]];
-		Di.push_back(V);
-		R.insert(R.end(), V.begin(), V.end());
+	//dirty. need the applice.
+	V = Di[D[i]];
+	Di.push_back(V);
+	R.insert(R.end(), V.begin(), V.end());
 	return R;
 }
 
@@ -161,9 +139,9 @@ bool ShowD(const Data& In) {
 }
 int main() {
 
-	std::size_t L = 1024;
+	std::size_t L = 10240;
 
-	auto D = MakeVector3(L,0,16);
+	auto D = MakeVector3(L,0,1024);
 	ShowD(D);
 	DType RA = Lzw_Enc(D);
 	ShowE(RA);
