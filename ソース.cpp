@@ -112,7 +112,7 @@ Data Lzw_Dec(const DType& D, const Data& In) {
 
 		R.insert(R.end(), V.begin(), V.end());
 	}
-	//dirty. need the applice.
+	//dirty. need the patch.
 	V = Di[D[i]];
 	Di.push_back(V);
 	R.insert(R.end(), V.begin(), V.end());
