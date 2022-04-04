@@ -141,7 +141,7 @@ int main() {
 
 	std::size_t L = 10240;
 
-	auto D = MakeVector3(L,0,1024);
+	auto D = MakeVector3(L,0,255);
 	ShowD(D);
 	DType RA = Lzw_Enc(D);
 	ShowE(RA);
