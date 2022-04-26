@@ -4,11 +4,27 @@
 #include <random>
 #include <limits>
 #include <algorithm>
+#include <fstream>
+#include <iterator>
 
 typedef std::vector<std::uint8_t> Data;
 typedef std::uint16_t Word;
 typedef std::vector<Word> DType;
 typedef std::vector<Data> Datas;
+
+
+
+Data LoadFromFile(const std::string& Name) {
+	std::ifstream ifs(Name, std::ios::binary);
+
+	if (!ifs.is_open()) { return {}; }
+
+	std::istreambuf_iterator<std::ifstream::char_type> it(ifs);
+	std::istreambuf_iterator<std::ifstream::char_type> End;
+
+	return { it,End };
+}
+	
 
 Data MakeVector(std::size_t N, std::uint32_t Seed = 0) {
 	std::mt19937 mt(Seed);
@@ -76,7 +92,7 @@ DType Lzw_Enc(const Data& D) {
 
 			Di.push_back(V);
 			V.clear();
-			i--;
+			if (i != 0) { i--; }
 		}
 	}
 	if (V.size()) {
@@ -92,7 +108,7 @@ DType Lzw_Enc(const Data& D) {
 	return R;
 }
 
-Data Lzw_Dec(const DType& D, const Data& In) {
+Data Lzw_Dec(const DType& D){// , const Data& In) {
 
 	Data V;
 	Datas Di;
@@ -120,6 +136,7 @@ Data Lzw_Dec(const DType& D, const Data& In) {
 }
 
 bool ShowE(const DType& In) {
+	std::cout.flush();
 	for (auto& o : In) {
 		std::cout << (int)o << ',';
 	}
@@ -129,6 +146,7 @@ bool ShowE(const DType& In) {
 	return true;
 }
 bool ShowD(const Data& In) {
+	std::cout.flush();
 	for (auto& o : In) {
 		std::cout << (int)o << ',';
 	}
@@ -137,11 +155,121 @@ bool ShowD(const Data& In) {
 
 	return true;
 }
+/**/
+Data WordToByte(const DType& In) {
+	Data R;
+
+	for (auto& o : In) {
+		R.push_back(o / 256);
+		R.push_back(o % 256);
+
+	}
+
+	return R;
+}
+DType ByteToWord(const Data& In) {
+	DType R;
+	for (std::size_t i = 0; i < In.size(); i += 2) {
+		Word W = In[i+1] + In[i] * 256;
+		R.push_back(W);
+	}
+
+	return R;
+}
+/**/
+/** /
+Data WordToByte(const DType& In) {
+	Data R;
+
+	for (auto& o : In) {
+		R.push_back(o % 256);
+		R.push_back(o / 256);
+	}
+
+	return R;
+}
+DType ByteToWord(const Data& In) {
+	DType R;
+	for (std::size_t i = 0; i < In.size(); i += 2) {
+		Word W = In[i] + In[i + 1] * 256;
+		R.push_back(W);
+	}
+
+	return R;
+}
+/**/
+
+/** /
+int main() {
+	for (std::size_t i = 0; i < 65536; i++) {
+		auto A = i / 256;
+		auto B = i % 256;
+
+		auto C = B + A * 256;
+
+		if (C == i) {
+			std::cout.flush();
+			std::cout << i << ": valid."<<std::endl;
+		}
+		else {
+			break;
+		}
+		
+	}
+
+	return 0;
+
+}
+/**/
+/**/
 int main() {
 
 	std::size_t L = 10240;
 
-	auto D = MakeVector3(L,0,255);
+	std::size_t C = 1;
+	bool IsFile =false;
+	Data D;
+	if (IsFile)
+	{
+		D = LoadFromFile("A.bmp");
+	}
+	else {
+		D = MakeVector3(L, 0, 255, 0);
+	}
+	//ShowD(D);
+
+	Data T = D;
+	DType RA;
+	for (std::size_t i = 0; i < C; i++) {
+		RA = Lzw_Enc(D);
+		ShowE(RA);
+		std::cout << "Comp:"<<RA.size()<<':' << T.size() / (double)RA.size() << std::endl;
+		D = WordToByte(RA);
+	}
+
+	std::cout << std::endl << "----EncEnd---" << std::endl;
+	Data RB;
+	for (std::size_t i = 0; i < C; i++) {
+		RB=Lzw_Dec(RA);
+		RA = ByteToWord(RB);
+		ShowE(RA);
+	}
+
+
+	if (T == RB) {
+		std::cout << "Good!" << std::endl;
+	}
+	else {
+		std::cout << "Odd!" << std::endl;
+	}
+	return 0;
+}
+/** /
+int main() {
+
+	std::size_t L = 10240;
+
+	auto D = MakeVector3(L,0,255,0);
 	ShowD(D);
 	DType RA = Lzw_Enc(D);
 	ShowE(RA);
@@ -159,3 +287,4 @@ int main() {
 	}
 	return 0;
 }
+/**/
