@@ -62,6 +62,42 @@ Data MakeVector3(std::size_t N, std::intmax_t Min,std::intmax_t Max, std::uint32
 
 	return R;
 }
+
+DType Lzw_EncII(Data D, std::size_t DC = 256) {
+	Datas Dc;
+	Data  X;
+	Data Y;
+	DType R;
+
+
+	for (std::size_t i = 0; i < DC; i++) {
+		Data Y;
+		Y.push_back(i);
+		Dc.push_back(Y);
+	}
+
+	for (std::size_t i = 0; i < D.size(); i++) {
+		Y = X;
+		X.push_back(D[i]);
+		auto it = std::find(Dc.begin(), Dc.end(), X);
+		if (it == Dc.end()) {
+			auto it2 = std::find(Dc.begin(), Dc.end(), Y);
+			auto L = std::distance(Dc.begin(), it2);
+			R.push_back(L);
+			Dc.push_back(X);
+			X.clear();
+			Y.clear();
+			i--;
+		}
+	}
+	if (X.size()) {
+		auto it = std::find(Dc.begin(), Dc.end(), X);
+		auto L = std::distance(Dc.begin(), it);
+		R.push_back(L);
+	}
+	return R;
+}
+
 DType Lzw_Enc(const Data& D) {
 
 	Datas Di;
@@ -169,8 +205,8 @@ Data WordToByte(const DType& In) {
 }
 DType ByteToWord(const Data& In) {
 	DType R;
-	for (std::size_t i = 0; i < In.size(); i += 2) {
-		Word W = In[i+1] + In[i] * 256;
+	for (std::size_t i =1; i < In.size(); i += 2) {
+		Word W = In[i] + In[i-1] * 256;
 		R.push_back(W);
 	}
 
@@ -224,7 +260,7 @@ int main() {
 /**/
 int main() {
 
-	std::size_t L = 10240;
+	std::size_t L = 1024;
 
 	std::size_t C = 1;
 	bool IsFile =false;
@@ -236,23 +272,28 @@ int main() {
 	else {
 		D = MakeVector3(L, 0, 255, 0);
 	}
-	//ShowD(D);
+	ShowD(D);
 
 	Data T = D;
 	DType RA;
 	for (std::size_t i = 0; i < C; i++) {
-		RA = Lzw_Enc(D);
+		RA = Lzw_EncII(D);
 		ShowE(RA);
-		std::cout << "Comp:"<<RA.size()<<':' << T.size() / (double)RA.size() << std::endl;
+		std::cout << "Comp:"<<RA.size()<<':' << RA.size() / (double)T.size() << std::endl;
 		D = WordToByte(RA);
 	}
 
 	std::cout << std::endl << "----EncEnd---" << std::endl;
 	Data RB;
 	for (std::size_t i = 0; i < C; i++) {
-		RB=Lzw_Dec(RA);
+		RB = Lzw_Dec(RA);
 		RA = ByteToWord(RB);
-		ShowE(RA);
+		if (i + 1 != C) {
+			ShowE(RA);
+		}
+		else {
+			ShowD(RB);
+		}
 	}
 
 
